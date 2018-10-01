@@ -4,28 +4,51 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const Recipe = require("./recipe_model");
+const fetch = require("node-fetch");
+const port = process.env.PORT || 8686;
+
+require('dotenv').config();
 
 app.use(cors());
-app.use(bodyParser.json())
+app.use(bodyParser.json({ extended: true }))
 
 mongoose.connect("mongodb://localhost/recipeDB");
  
-
+/** TEST VARS **/
+var ENV = "test";
+const TEMPDATA = require("./tempData.js");
+ 
+app.post("/search", (req, res) =>{ 
+    const APP_ID = process.env.APP_ID;
+    const APP_KEY = process.env.APP_KEY;
+    if(ENV === "test"){
+        let returnData = TEMPDATA;
+        returnData.params = [];
+        res.json( returnData );
+        console.log( APP_ID + " " + APP_KEY);
+    } else{
+        let URL = `https://api.edamam.com/search?q=${req.body.searchFor}&app_id=${APP_ID}&app_key=${APP_KEY}`;    
+        fetch(URL)
+        .then(resp => resp.json())
+        .then(resp => {
+            let returnData = resp;
+            returnData.params = [];
+            res.json( returnData );
+        });
+    } 
+});
 
 ////GET RECIPES FROM DATABASE
-app.get("/gr", (req, res) =>{
-    console.log("connected2");
+app.get("/gr", (req, res) =>{ 
     Recipe.find({}, (err, allRecipes) =>{
         if(err){
             console.log(err);
         }else{
-            newRects = [];
-
+            newRects = []; 
             for(let i=0; i<allRecipes.length; i++){
                 let tNewRects = {"recipe": allRecipes[i]}
                 newRects.push(tNewRects);
-            }
-
+            } 
             let retRecs = {  "hits": newRects }
             res.json( retRecs );
         }
@@ -59,6 +82,6 @@ app.delete("/gr", (req, res) =>{
     });
 }); //End DELETE
 
-app.listen(8686, ()=>{
+app.listen(port, ()=>{
     console.log('recipesite server started');
 });
