@@ -12,8 +12,9 @@ require('dotenv').config();
 app.use(cors());
 app.use(bodyParser.json({ extended: true }))
 
-mongoose.connect("mongodb://localhost/recipeDB");
- 
+mongoose.connect("mongodb://localhost:27017/recipeDB", {useNewUrlParser: true});
+
+
 /** TEST VARS **/
 var ENV = "test";
 const TEMPDATA = require("./tempData.js");
@@ -24,8 +25,7 @@ app.post("/search", (req, res) =>{
     if(ENV === "test"){
         let returnData = TEMPDATA;
         returnData.params = [];
-        res.json( returnData );
-        console.log( APP_ID + " " + APP_KEY);
+        res.json( returnData ); 
     } else{
         let URL = `https://api.edamam.com/search?q=${req.body.searchFor}&app_id=${APP_ID}&app_key=${APP_KEY}`;    
         fetch(URL)
