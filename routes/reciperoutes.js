@@ -1,11 +1,14 @@
 const express = require('express');
 const router = express.Router();
-
-const Recipe = require("../recipe_model");
+const fetch = require("node-fetch");
+const Recipe = require("./../schema/recipe_model");
+ 
+require("dotenv").config();
+console.log(process.env.APP_ID); 
 
 ////GET RECIPES FROM DATABASE
-router.get("/", (req, res) =>{ 
-    Recipe.find({}, (err, allRecipes) =>{
+router.get("/:account", (req, res) =>{  
+    Recipe.find({"account": req.params.account}, (err, allRecipes) =>{
         if(err){
             console.log(err);
         }else{
@@ -20,7 +23,7 @@ router.get("/", (req, res) =>{
     });  
 });  
 
-////ADD NEW RECIPE FROM DATABASE
+////ADD NEW RECIPE TO DATABASE
 router.post("/", (req, res) =>{ 
     let newRecipe =  req.body; 
     Recipe.create(newRecipe, (err, newRec) => {
@@ -35,9 +38,8 @@ router.post("/", (req, res) =>{
 
 ////DELETE RECIPE FROM DATABASE
 router.delete("/", (req, res) =>{
-    let delRecipe =  req.body.deleteRecipe;
-    console.log(delRecipe);
-    Recipe.deleteOne( { uri: delRecipe }, (err, deleted) =>{
+    let delRecipe =  req.body.deleteRecipe; 
+    Recipe.deleteOne( { uri: delRecipe, account: req.body.account }, (err, deleted) =>{
         if(err){ 
             throw err;
         }else{
@@ -49,16 +51,14 @@ router.delete("/", (req, res) =>{
 router.post("/search", (req, res) =>{ 
     /** TEST VARS **/
     var ENV = "test";
-    const TEMPDATA = require("../tempData.js");
-
-    const APP_ID = process.env.APP_ID;
-    const APP_KEY = process.env.APP_KEY; 
+    const TEMPDATA = require("../tempData.js"); 
+    
     if(ENV === "test"){
         let returnData = TEMPDATA;
         returnData.params = [];
         res.json( returnData ); 
     } else{
-        let URL = `https://api.edamam.com/search?q=${req.body.searchFor}&app_id=${APP_ID}&app_key=${APP_KEY}`;    
+        let URL = `https://api.edamam.com/search?q=${req.body.searchFor}&app_id=${process.env.APP_ID}&app_key=${process.env.APP_KEY}`;    
         fetch(URL)
         .then(resp => resp.json())
         .then(resp => {
