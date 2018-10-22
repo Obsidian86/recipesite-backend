@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router(); 
+const router =  express.Router({mergeParams: true});
 
 const shoppingList = require("./../schema/listSchema");
 
@@ -26,48 +26,36 @@ router.post("/sendlist", (req, res)=>{  /*
         .catch(err =>{
             console.error(err.toString());
         }); */ 
-        res.json( {"sent": "List was successfully sent"}); 
+        res.json({"sent": "List was successfully sent"}); 
 });
-router.post("/savelist", (req, res) =>{ 
-    let newList = {
-        "account": req.body.sendTo,
-        "list": req.body.list
-    }
-    shoppingList.findOne({"account": req.body.sendTo}, (err, list) =>{
-        if(err) throw console.log(err);
-        if(!list){
-            console.log(" NO LIST EXISTS");
-            //No list exists Create new list
-            shoppingList.create(newList, (err, newList) => {
-                if(err){
-                    console.log(err);
-                }else{
-                    newList.save(); 
-                    res.json( {"sent": "ok"}); 
-                }
-            }); 
+router.post("/savelist", async (req, res, next) =>{
+    try {
+        let user = req.params.id;  
+        let newList = { user, "list": req.body.list } 
+        let findList = await shoppingList.findOne({"user" : req.params.id}); 
+        if(!findList){ 
+            await shoppingList.create(newList);
+            res.status(200).json({newList});
         }else{ 
-            //if List exists, update current
-            shoppingList.updateOne({"account": req.body.sendTo}, newList, (err, list) => {
-                if(err){
-                    console.log(err);
-                }else{  
-                    res.json({"sent": "ok"}); 
-                }
-            });
+            await shoppingList.updateOne({"user": req.params.id }, newList);
+            res.status(200).json({newList});
         }
-    });
+    } catch (err) {
+        return next(err);
+    } 
 });
 
-router.get("/getlist/:account", (req, res) =>{ 
-    shoppingList.findOne({"account": req.params.account}, (err, list) =>{
-        if(err) throw console.log(err);
-        if(!list){
-            res.json({"list": []}); 
+router.get("/getlist", async (req, res, next) =>{   
+    try { 
+        let findList = await shoppingList.findOne({ "user" : req.params.id }); 
+        if(findList){
+            res.status(200).json(findList.list);
         }else{
-            res.json(list); 
+            res.status(200).json([])
         }
-    });
+    } catch (err) {
+        return next(err);
+    }
 });
 
 module.exports = router;

@@ -1,9 +1,9 @@
 const mongoose = require("mongoose");
 
 const listSchema = new mongoose.Schema({
-    account: {
-        type: String,
-        required: true
+    user: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User"
     },
     list: Array
 });

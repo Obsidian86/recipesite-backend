@@ -11,14 +11,10 @@ const userSchema = new mongoose.Schema({
         type: String,
         required: true
     },
-    shoppinglist: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: "shoppinglist"
-    },
-    recipes:{
+    recipes:[{
         type: mongoose.Schema.Types.ObjectId,
         ref: "Recipe"
-    }
+    }]
 });
 
 userSchema.pre("save", async function(next){
@@ -26,6 +22,7 @@ userSchema.pre("save", async function(next){
         if(!this.isModified("password")){
             return next();
         }
+        console.log( this.password );
         let hashedPassword = await bcrypt.hash(this.password, 10);
         this.password = hashedPassword;
         return next();

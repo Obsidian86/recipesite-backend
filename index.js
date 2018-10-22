@@ -7,7 +7,8 @@ const port = process.env.PORT || 8686;
 const recipeRoutes = require('./routes/reciperoutes');
 const listRoutes = require('./routes/listroutes');
 const profileRoutes = require('./routes/profileroutes');
- 
+const {loggedIn, verifyUser } = require("./middleware/profile"); 
+
 app.use(cors());
 app.use(bodyParser.json({ extended: true }))
 
@@ -16,11 +17,10 @@ mongoose.connect("mongodb://localhost:27017/recipeDB", {useNewUrlParser: true}, 
     console.log('connected to mongo');
 });
 
-app.use("/gr", recipeRoutes);
-app.use("/sl", listRoutes); 
+app.use("/gr/:id", loggedIn, verifyUser, recipeRoutes);
+app.use("/sl/:id", loggedIn, verifyUser, listRoutes); 
 app.use("/profile", profileRoutes); 
-
-
+ 
 //If no routes are found
 app.use((req, res, next)=>{
     let error = new Error;
